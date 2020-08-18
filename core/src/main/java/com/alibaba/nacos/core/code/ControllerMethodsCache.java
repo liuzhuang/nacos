@@ -48,6 +48,8 @@ import java.util.concurrent.ConcurrentMap;
 import static com.alibaba.nacos.core.utils.Constants.REQUEST_PATH_SEPARATOR;
 
 /**
+ * SpringMVC和方法映射
+ *
  * Method cache.
  *
  * @author nkorange
@@ -55,16 +57,28 @@ import static com.alibaba.nacos.core.utils.Constants.REQUEST_PATH_SEPARATOR;
  */
 @Component
 public class ControllerMethodsCache {
-    
+
     private static final Logger LOGGER = LoggerFactory.getLogger(ControllerMethodsCache.class);
-    
+
     @Value("${server.servlet.contextPath:/nacos}")
     private String contextPath;
-    
-    private ConcurrentMap<RequestMappingInfo, Method> methods = new ConcurrentHashMap<>();
-    
+
+    /**
+     * RequestMapping和Method映射
+     */
+    private final ConcurrentMap<RequestMappingInfo, Method> methods = new ConcurrentHashMap<>();
+
+    /**
+     * urlPath和RequestMappingInfo映射
+     */
     private final ConcurrentMap<String, List<RequestMappingInfo>> urlLookup = new ConcurrentHashMap<>();
-    
+
+    /**
+     * 根据Servlet获取Method【这个类的唯一用法】，用于权限认证，获取方法上有没有指定的注解。
+     *
+     * @param request
+     * @return
+     */
     public Method getMethod(HttpServletRequest request) {
         String path = getPath(request);
         if (path == null) {
@@ -94,7 +108,7 @@ public class ControllerMethodsCache {
         }
         return methods.get(bestMatch);
     }
-    
+
     private String getPath(HttpServletRequest request) {
         String path = null;
         try {
@@ -104,7 +118,7 @@ public class ControllerMethodsCache {
         }
         return path;
     }
-    
+
     private List<RequestMappingInfo> findMatchedInfo(List<RequestMappingInfo> requestMappingInfos,
             HttpServletRequest request) {
         List<RequestMappingInfo> matchedInfo = new ArrayList<>();
@@ -117,8 +131,10 @@ public class ControllerMethodsCache {
         }
         return matchedInfo;
     }
-    
+
     /**
+     * 添加映射
+     *
      * find target method from this package.
      *
      * @param packageName package name
@@ -126,13 +142,15 @@ public class ControllerMethodsCache {
     public void initClassMethod(String packageName) {
         Reflections reflections = new Reflections(packageName);
         Set<Class<?>> classesList = reflections.getTypesAnnotatedWith(RequestMapping.class);
-        
+
         for (Class clazz : classesList) {
             initClassMethod(clazz);
         }
     }
-    
+
     /**
+     * 添加映射
+     *
      * find target method from class list.
      *
      * @param classesList class list
@@ -142,8 +160,10 @@ public class ControllerMethodsCache {
             initClassMethod(clazz);
         }
     }
-    
+
     /**
+     * 添加映射
+     *
      * find target method from target class.
      *
      * @param clazz {@link Class}
@@ -169,37 +189,37 @@ public class ControllerMethodsCache {
             }
         }
     }
-    
+
     private void parseSubAnnotations(Method method, String classPath) {
-        
+
         final GetMapping getMapping = method.getAnnotation(GetMapping.class);
         final PostMapping postMapping = method.getAnnotation(PostMapping.class);
         final PutMapping putMapping = method.getAnnotation(PutMapping.class);
         final DeleteMapping deleteMapping = method.getAnnotation(DeleteMapping.class);
         final PatchMapping patchMapping = method.getAnnotation(PatchMapping.class);
-        
+
         if (getMapping != null) {
             put(RequestMethod.GET, classPath, getMapping.value(), getMapping.params(), method);
         }
-        
+
         if (postMapping != null) {
             put(RequestMethod.POST, classPath, postMapping.value(), postMapping.params(), method);
         }
-        
+
         if (putMapping != null) {
             put(RequestMethod.PUT, classPath, putMapping.value(), putMapping.params(), method);
         }
-        
+
         if (deleteMapping != null) {
             put(RequestMethod.DELETE, classPath, deleteMapping.value(), deleteMapping.params(), method);
         }
-        
+
         if (patchMapping != null) {
             put(RequestMethod.PATCH, classPath, patchMapping.value(), patchMapping.params(), method);
         }
-        
+
     }
-    
+
     private void put(RequestMethod requestMethod, String classPath, String[] requestPaths, String[] requestParams,
             Method method) {
         if (ArrayUtils.isEmpty(requestPaths)) {
@@ -212,7 +232,7 @@ public class ControllerMethodsCache {
             addUrlAndMethodRelation(urlKey, requestParams, method);
         }
     }
-    
+
     private void addUrlAndMethodRelation(String urlKey, String[] requestParam, Method method) {
         RequestMappingInfo requestMappingInfo = new RequestMappingInfo();
         requestMappingInfo.setPathRequestCondition(new PathRequestCondition(urlKey));
@@ -225,11 +245,11 @@ public class ControllerMethodsCache {
         requestMappingInfos.add(requestMappingInfo);
         methods.put(requestMappingInfo, method);
     }
-    
+
     public String getContextPath() {
         return contextPath;
     }
-    
+
     public void setContextPath(String contextPath) {
         this.contextPath = contextPath;
     }

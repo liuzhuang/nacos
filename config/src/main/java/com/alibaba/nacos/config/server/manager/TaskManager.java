@@ -38,23 +38,23 @@ import java.util.concurrent.locks.ReentrantLock;
  * @author huali
  */
 public final class TaskManager implements TaskManagerMBean {
-    
+
     private static final Logger LOGGER = LogUtil.DEFAULT_LOG;
-    
+
     private final ConcurrentHashMap<String, AbstractTask> tasks = new ConcurrentHashMap<String, AbstractTask>();
-    
+
     private final ConcurrentHashMap<String, TaskProcessor> taskProcessors = new ConcurrentHashMap<String, TaskProcessor>();
-    
+
     private TaskProcessor defaultTaskProcessor;
-    
+
     Thread processingThread;
-    
+
     private final AtomicBoolean closed = new AtomicBoolean(true);
-    
+
     private String name;
-    
+
     class ProcessRunnable implements Runnable {
-        
+
         @Override
         public void run() {
             while (!TaskManager.this.closed.get()) {
@@ -67,23 +67,23 @@ public final class TaskManager implements TaskManagerMBean {
             }
         }
     }
-    
+
     ReentrantLock lock = new ReentrantLock();
-    
+
     Condition notEmpty = this.lock.newCondition();
-    
+
     public TaskManager() {
         this(null);
     }
-    
+
     public AbstractTask getTask(String type) {
         return this.tasks.get(type);
     }
-    
+
     public TaskProcessor getTaskProcessor(String type) {
         return this.taskProcessors.get(type);
     }
-    
+
     @SuppressWarnings("PMD.AvoidManuallyCreateThreadRule")
     public TaskManager(String name) {
         this.name = name;
@@ -96,16 +96,16 @@ public final class TaskManager implements TaskManagerMBean {
         this.closed.set(false);
         this.processingThread.start();
     }
-    
+
     public int size() {
         return tasks.size();
     }
-    
+
     public void close() {
         this.closed.set(true);
         this.processingThread.interrupt();
     }
-    
+
     /**
      * Await for lock.
      *
@@ -121,7 +121,7 @@ public final class TaskManager implements TaskManagerMBean {
             this.lock.unlock();
         }
     }
-    
+
     /**
      * Await for lock by timeout.
      *
@@ -142,15 +142,15 @@ public final class TaskManager implements TaskManagerMBean {
             this.lock.unlock();
         }
     }
-    
+
     public void addProcessor(String type, TaskProcessor taskProcessor) {
         this.taskProcessors.put(type, taskProcessor);
     }
-    
+
     public void removeProcessor(String type) {
         this.taskProcessors.remove(type);
     }
-    
+
     /**
      * Remove task.
      *
@@ -165,7 +165,7 @@ public final class TaskManager implements TaskManagerMBean {
             this.lock.unlock();
         }
     }
-    
+
     /**
      * Add task into the task map container.
      *
@@ -184,14 +184,18 @@ public final class TaskManager implements TaskManagerMBean {
             this.lock.unlock();
         }
     }
-    
+
     /**
+     * 轮训执行方法
+     *
      * Execute to process all tasks in the task map.
      */
     protected void process() {
         for (Map.Entry<String, AbstractTask> entry : this.tasks.entrySet()) {
             AbstractTask task = null;
             this.lock.lock();
+
+            // 获取Task
             try {
                 // Getting task.
                 task = entry.getValue();
@@ -207,7 +211,8 @@ public final class TaskManager implements TaskManagerMBean {
             } finally {
                 this.lock.unlock();
             }
-            
+
+            // 由Processor处理Task
             if (null != task) {
                 // Getting task processor.
                 TaskProcessor processor = this.taskProcessors.get(entry.getKey());
@@ -226,14 +231,14 @@ public final class TaskManager implements TaskManagerMBean {
                     if (!result) {
                         // If task is executed failed, the set lastProcessTime.
                         task.setLastProcessTime(System.currentTimeMillis());
-                        
+
                         // Add task into task map again.
                         this.addTask(entry.getKey(), task);
                     }
                 }
             }
         }
-        
+
         if (tasks.isEmpty()) {
             this.lock.lock();
             try {
@@ -243,11 +248,11 @@ public final class TaskManager implements TaskManagerMBean {
             }
         }
     }
-    
+
     public boolean isEmpty() {
         return tasks.isEmpty();
     }
-    
+
     public TaskProcessor getDefaultTaskProcessor() {
         this.lock.lock();
         try {
@@ -256,7 +261,7 @@ public final class TaskManager implements TaskManagerMBean {
             this.lock.unlock();
         }
     }
-    
+
     public void setDefaultTaskProcessor(TaskProcessor defaultTaskProcessor) {
         this.lock.lock();
         try {
@@ -265,7 +270,7 @@ public final class TaskManager implements TaskManagerMBean {
             this.lock.unlock();
         }
     }
-    
+
     @Override
     public String getTaskInfos() {
         StringBuilder sb = new StringBuilder();
@@ -279,10 +284,10 @@ public final class TaskManager implements TaskManagerMBean {
             }
             sb.append(Constants.NACOS_LINE_SEPARATOR);
         }
-        
+
         return sb.toString();
     }
-    
+
     /**
      * Init and register the mbean object.
      */

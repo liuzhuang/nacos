@@ -33,6 +33,8 @@ import javax.servlet.http.HttpServletRequest;
 import javax.servlet.http.HttpServletResponse;
 
 /**
+ * 集群之间通讯
+ *
  * Controller for other node notification.
  *
  * @author boyan
@@ -41,19 +43,19 @@ import javax.servlet.http.HttpServletResponse;
 @RestController
 @RequestMapping(Constants.COMMUNICATION_CONTROLLER_PATH)
 public class CommunicationController {
-    
+
     private final DumpService dumpService;
-    
+
     private final LongPollingService longPollingService;
-    
+
     private String trueStr = "true";
-    
+
     @Autowired
     public CommunicationController(DumpService dumpService, LongPollingService longPollingService) {
         this.dumpService = dumpService;
         this.longPollingService = longPollingService;
     }
-    
+
     /**
      * Notify the change of config information.
      *
@@ -76,7 +78,7 @@ public class CommunicationController {
         }
         return true;
     }
-    
+
     /**
      * Get client config information of subscriber in local machine.
      *
@@ -87,7 +89,7 @@ public class CommunicationController {
         group = StringUtils.isBlank(group) ? Constants.DEFAULT_GROUP : group;
         return longPollingService.getCollectSubscribleInfo(dataId, group, tenant);
     }
-    
+
     /**
      * Get client config listener lists of subscriber in local machine.
      *

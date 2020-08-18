@@ -27,17 +27,18 @@ import com.alibaba.nacos.core.utils.ApplicationUtils;
  * @author <a href="mailto:liaochuntao@live.com">liaochuntao</a>
  */
 public class ConfigChangePublisher {
-    
+
     /**
      * Notify ConfigChange.
      *
      * @param event ConfigDataChangeEvent instance.
      */
     public static void notifyConfigChange(ConfigDataChangeEvent event) {
+        // 啥意思？如果是内嵌内存数据库，并且不是单机部署，就退出？这个事件是干嘛的？
         if (PropertyUtil.isEmbeddedStorage() && !ApplicationUtils.getStandaloneMode()) {
             return;
         }
         NotifyCenter.publishEvent(event);
     }
-    
+
 }

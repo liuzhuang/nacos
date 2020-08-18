@@ -39,20 +39,26 @@ import javax.annotation.PostConstruct;
 @EnableScheduling
 @PropertySource("/application.properties")
 public class ConsoleConfig {
-    
+
     @Autowired
     private ControllerMethodsCache methodsCache;
-    
+
     /**
-     * Init.
+     * 添加SpringMvc和Controller method的映射关系。
      */
     @PostConstruct
     public void init() {
+
+        // nacos-naming模块
         methodsCache.initClassMethod("com.alibaba.nacos.naming.controllers");
+
+        // nacos-console模块（本模块）
         methodsCache.initClassMethod("com.alibaba.nacos.console.controller");
+
+        // nacos-config模块
         methodsCache.initClassMethod("com.alibaba.nacos.config.server.controller");
     }
-    
+
     @Bean
     public CorsFilter corsFilter() {
         CorsConfiguration config = new CorsConfiguration();
