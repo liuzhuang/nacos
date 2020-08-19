@@ -37,7 +37,11 @@ public class ConfigExample {
         String group = "DEFAULT_GROUP";
         Properties properties = new Properties();
         properties.put("serverAddr", serverAddr);
+
+        // 通过反射创建ConfigService，实现类是com.alibaba.nacos.client.config.NacosConfigService
         ConfigService configService = NacosFactory.createConfigService(properties);
+
+
         String content = configService.getConfig(dataId, group, 5000);
         System.out.println(content);
         configService.addListener(dataId, group, new Listener() {
