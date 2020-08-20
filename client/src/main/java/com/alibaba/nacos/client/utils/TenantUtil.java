@@ -19,19 +19,26 @@ package com.alibaba.nacos.client.utils;
 import com.alibaba.nacos.common.utils.StringUtils;
 
 /**
+ * 多租户
+ *
  * Tenant Util.
  *
  * @author Nacos
  */
 public class TenantUtil {
-    
+
+    /**
+     * 用户租户ID
+     */
     private static final String USER_TENANT;
-    
+
     static {
         USER_TENANT = System.getProperty("tenant.id", "");
     }
-    
+
     /**
+     * 适配ACM
+     *
      * Adapt the way ACM gets tenant on the cloud.
      * <p>
      * Note the difference between getting and getting ANS. Since the processing logic on the server side is different,
@@ -42,22 +49,24 @@ public class TenantUtil {
      */
     public static String getUserTenantForAcm() {
         String tmp = USER_TENANT;
-        
+
         if (StringUtils.isBlank(USER_TENANT)) {
             tmp = System.getProperty("acm.namespace", "");
         }
-        
+
         return tmp;
     }
-    
+
     /**
+     * 适配ANS
+     *
      * Adapt the way ANS gets tenant on the cloud.
      *
      * @return user tenant for ans
      */
     public static String getUserTenantForAns() {
         String tmp = USER_TENANT;
-        
+
         if (StringUtils.isBlank(USER_TENANT)) {
             tmp = System.getProperty("ans.namespace");
         }

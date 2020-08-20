@@ -1,0 +1,12 @@
+
+
+
+
+
+
+$GOPATH/src/coredns/coredns -conf $path_to_corefile -dns.port $dns_port
+
+
+
+
+

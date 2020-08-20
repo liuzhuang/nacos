@@ -458,6 +458,8 @@ public class ServerListManager implements Closeable {
     }
 
     /**
+     * TODO 什么名字
+     *
      * The name of the different environment.
      */
     private final String name;

@@ -61,6 +61,8 @@ import static com.alibaba.nacos.api.common.Constants.LINE_SEPARATOR;
 import static com.alibaba.nacos.api.common.Constants.WORD_SEPARATOR;
 
 /**
+ * 客户端长轮训服务
+ *
  * Long polling.
  *
  * @author Nacos
@@ -228,7 +230,7 @@ public class ClientWorker implements Closeable {
         cache = new CacheData(configFilterChainManager, agent.getName(), dataId, group);
 
         synchronized (cacheMap) {
-            CacheData cacheFromMap = getCache(dataId, group);
+            CacheData cacheFromMap = getCache(dataId, group); // 防止并发
             // multiple listeners on the same dataid+group and race condition,so double check again
             //other listener thread beat me to set to cacheMap
             if (null != cacheFromMap) {
@@ -236,7 +238,7 @@ public class ClientWorker implements Closeable {
                 //reset so that server not hang this check
                 cache.setInitializing(true);
             } else {
-                int taskId = cacheMap.get().size() / (int) ParamUtil.getPerTaskConfigSize();
+                int taskId = cacheMap.get().size() / (int) ParamUtil.getPerTaskConfigSize(); // TODO 啥意思？
                 cache.setTaskId(taskId);
             }
 
@@ -370,12 +372,22 @@ public class ClientWorker implements Closeable {
         }
     }
 
+    /**
+     * 检查本地配置
+     * 更新CacheData对象
+     *      isUseLocalConfig
+     *      content
+     *      localConfigLastModified
+     * @param cacheData
+     */
     private void checkLocalConfig(CacheData cacheData) {
         final String dataId = cacheData.dataId;
         final String group = cacheData.group;
         final String tenant = cacheData.tenant;
         File path = LocalConfigInfoProcessor.getFailoverFile(agent.getName(), dataId, group, tenant);
 
+
+        // 强行掰正！！如果设置成了不使用本地文件，但是有本地文件，重新设置成使用本地文件 TODO isUseLocalConfig 是什么意思？是全局配置，还是本次轮训请求中，是否使用本地文件？应该是本地请求中是否使用本地文件，妈的，改成isHasLocalConfig不就得了！！！！！
         if (!cacheData.isUseLocalConfigInfo() && path.exists()) {
             String content = LocalConfigInfoProcessor.getFailover(agent.getName(), dataId, group, tenant);
             final String md5 = MD5Utils.md5Hex(content, Constants.ENCODE);
@@ -389,6 +401,7 @@ public class ClientWorker implements Closeable {
             return;
         }
 
+        // 如果是使用本地文件，但是又没有文件
         // If use local config info, then it doesn't notify business listener and notify after getting from server.
         if (cacheData.isUseLocalConfigInfo() && !path.exists()) {
             cacheData.setUseLocalConfigInfo(false);
@@ -397,6 +410,7 @@ public class ClientWorker implements Closeable {
             return;
         }
 
+        // 使用本地文件，并且文件内容发生改变
         // When it changed.
         if (cacheData.isUseLocalConfigInfo() && path.exists() && cacheData.getLocalConfigInfoVersion() != path
                 .lastModified()) {
@@ -416,10 +430,12 @@ public class ClientWorker implements Closeable {
     }
 
     /**
+     * TODO rename loopCheckConfig 或者？executeLongPollingTask loopExecuteLongPollingTask
+     *
      * Check config info.
      */
     public void checkConfigInfo() {
-        // Dispatch taskes.
+        // Dispatch taskes. 待派发的任务(listener)
         int listenerSize = cacheMap.get().size();
 
         // Round up the longingTaskCount.
@@ -577,6 +593,7 @@ public class ClientWorker implements Closeable {
 
         init(properties);
 
+        // TODO rename LongPollingScheduledExecutor
         this.executor = Executors.newScheduledThreadPool(1, new ThreadFactory() {
             @Override
             public Thread newThread(Runnable r) {
@@ -587,6 +604,7 @@ public class ClientWorker implements Closeable {
             }
         });
 
+        // TODO rename LongPollingExecutor
         this.executorService = Executors
                 .newScheduledThreadPool(Runtime.getRuntime().availableProcessors(), new ThreadFactory() {
                     @Override
@@ -632,6 +650,9 @@ public class ClientWorker implements Closeable {
         LOGGER.info("{} do shutdown stop", className);
     }
 
+    /**
+     * 长轮训Task
+     */
     class LongPollingRunnable implements Runnable {
 
         private final int taskId;
@@ -646,13 +667,16 @@ public class ClientWorker implements Closeable {
             List<CacheData> cacheDatas = new ArrayList<CacheData>();
             List<String> inInitializingCacheList = new ArrayList<String>();
             try {
+                // 检查本地配置
                 // check failover config
                 for (CacheData cacheData : cacheMap.get().values()) {
                     if (cacheData.getTaskId() == taskId) {
                         cacheDatas.add(cacheData);
                         try {
                             checkLocalConfig(cacheData);
-                            if (cacheData.isUseLocalConfigInfo()) {
+
+                            // 如果使用本地文件，向listener发送消息
+                            if (cacheData.isUseLocalConfigInfo()) { // TODO isSendListener
                                 cacheData.checkListenerMd5();
                             }
                         } catch (Exception e) {
@@ -727,12 +751,16 @@ public class ClientWorker implements Closeable {
     final ScheduledExecutorService executorService;
 
     /**
+     * 监听Listener，一个groupKey对应一个Listener？
+     *
      * groupKey -> cacheData.
      */
     private final AtomicReference<Map<String, CacheData>> cacheMap = new AtomicReference<Map<String, CacheData>>(
             new HashMap<String, CacheData>());
 
     /**
+     * TODO rename runningTaskIds
+     *
      * Store the running taskId.
      */
     private final ConcurrentHashSet<Integer> taskIdSet = new ConcurrentHashSet<Integer>();

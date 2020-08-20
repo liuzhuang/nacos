@@ -1,0 +1,118 @@
+[WARNING] The project com.alibaba.nacos:nacos-all:pom:1.4.0-SNAPSHOT uses prerequisites which is only intended for maven-plugin projects but not for non maven-plugin projects. For such purposes you should use the maven-enforcer-plugin. See https://maven.apache.org/enforcer/enforcer-rules/requireMavenVersion.html
+
+[com.alibaba.nacos:nacos-all]
+com.alibaba.nacos:nacos-all:pom:1.4.0-SNAPSHOT
+
+
+[com.alibaba.nacos:nacos-api]
+com.alibaba.nacos:nacos-api
+
+
+[com.alibaba.nacos:nacos-common]
+com.alibaba.nacos:nacos-common
++- com.alibaba.nacos:nacos-api
+
+
+[com.alibaba.nacos:nacos-consistency]
+com.alibaba.nacos:nacos-consistency
++- com.alibaba.nacos:nacos-common
+|  +- com.alibaba.nacos:nacos-api
+
+
+[com.alibaba.nacos:nacos-auth]
+com.alibaba.nacos:nacos-auth
++- com.alibaba.nacos:nacos-common
+|  +- com.alibaba.nacos:nacos-api
+
+
+[com.alibaba.nacos:nacos-core]
+com.alibaba.nacos:nacos-core
++- com.alibaba.nacos:nacos-common
+|  +- com.alibaba.nacos:nacos-api
++- com.alibaba.nacos:nacos-consistency
++- com.alibaba.nacos:nacos-auth
+
+[com.alibaba.nacos:nacos-config]
+com.alibaba.nacos:nacos-config
++- com.alibaba.nacos:nacos-api
++- com.alibaba.nacos:nacos-core
+|  +- com.alibaba.nacos:nacos-common
+|  +- com.alibaba.nacos:nacos-consistency
+|  +- com.alibaba.nacos:nacos-auth
+
+
+[com.alibaba.nacos:nacos-cmdb]
+com.alibaba.nacos:nacos-cmdb
++- com.alibaba.nacos:nacos-core
+|  +- com.alibaba.nacos:nacos-common
+|  +- com.alibaba.nacos:nacos-consistency
+|  +- com.alibaba.nacos:nacos-auth
++- com.alibaba.nacos:nacos-api
+
+
+[com.alibaba.nacos:nacos-naming]
+com.alibaba.nacos:nacos-naming
++- com.alibaba.nacos:nacos-core
+|  +- com.alibaba.nacos:nacos-common
+|  +- com.alibaba.nacos:nacos-consistency
+|  +- com.alibaba.nacos:nacos-auth
++- com.alibaba.nacos:nacos-api
++- com.alibaba.nacos:nacos-cmdb
+
+
+[com.alibaba.nacos:nacos-address]
+com.alibaba.nacos:nacos-address
++- com.alibaba.nacos:nacos-naming
+|  +- com.alibaba.nacos:nacos-core
+|  |  +- com.alibaba.nacos:nacos-common
+|  |  +- com.alibaba.nacos:nacos-consistency
+|  |  +- com.alibaba.nacos:nacos-auth
+|  +- com.alibaba.nacos:nacos-api
+
+
+[com.alibaba.nacos:nacos-client]
+com.alibaba.nacos:nacos-client
++- com.alibaba.nacos:nacos-common
++- com.alibaba.nacos:nacos-api
+
+
+[com.alibaba.nacos:nacos-istio]
+com.alibaba.nacos:nacos-istio
++- com.alibaba.nacos:nacos-api
++- com.alibaba.nacos:nacos-client
+|  +- com.alibaba.nacos:nacos-common
++- com.alibaba.nacos:nacos-config
++- com.alibaba.nacos:nacos-naming
+|  \- com.alibaba.nacos:nacos-cmdb
++- com.alibaba.nacos:nacos-core
+|  +- com.alibaba.nacos:nacos-consistency
+|  +- com.alibaba.nacos:nacos-auth
+
+
+[com.alibaba.nacos:nacos-console]
+com.alibaba.nacos:nacos-console
++- com.alibaba.nacos:nacos-config
+|  +- com.alibaba.nacos:nacos-api
+|  +- com.alibaba.nacos:nacos-core
+|  |  +- com.alibaba.nacos:nacos-common
+|  |  +- com.alibaba.nacos:nacos-consistency
+|  |  +- com.alibaba.nacos:nacos-auth
++- com.alibaba.nacos:nacos-naming
+|  \- com.alibaba.nacos:nacos-cmdb
++- com.alibaba.nacos:nacos-istio
+|  +- com.alibaba.nacos:nacos-client
+
+
+[com.alibaba.nacos:nacos-distribution]
+com.alibaba.nacos:nacos-distribution:pom:1.4.0-SNAPSHOT
++- com.alibaba.nacos:nacos-console
+|  +- com.alibaba.nacos:nacos-config
+|  |  +- com.alibaba.nacos:nacos-api
+|  |  +- com.alibaba.nacos:nacos-core
+|  |  |  +- com.alibaba.nacos:nacos-common
+|  |  |  +- com.alibaba.nacos:nacos-consistency
+|  |  |  +- com.alibaba.nacos:nacos-auth
+|  +- com.alibaba.nacos:nacos-naming
+|  |  \- com.alibaba.nacos:nacos-cmdb
+|  +- com.alibaba.nacos:nacos-istio
+|  |  +- com.alibaba.nacos:nacos-client

@@ -19,24 +19,26 @@ package com.alibaba.nacos.client.config.common;
 import com.alibaba.nacos.common.utils.StringUtils;
 
 /**
+ * 分组唯一KEY
+ *
  * Synthesize the form of dataId+groupId. Escapes reserved characters in dataId and groupId.
  *
  * @author Nacos
  */
 public class GroupKey {
-    
+
     public static String getKey(String dataId, String group) {
         return getKey(dataId, group, "");
     }
-    
+
     public static String getKey(String dataId, String group, String datumStr) {
         return doGetKey(dataId, group, datumStr);
     }
-    
+
     public static String getKeyTenant(String dataId, String group, String tenant) {
         return doGetKey(dataId, group, tenant);
     }
-    
+
     private static String doGetKey(String dataId, String group, String datumStr) {
         StringBuilder sb = new StringBuilder();
         urlEncode(dataId, sb);
@@ -46,10 +48,10 @@ public class GroupKey {
             sb.append('+');
             urlEncode(datumStr, sb);
         }
-        
+
         return sb.toString();
     }
-    
+
     /**
      * Parse key.
      *
@@ -61,7 +63,7 @@ public class GroupKey {
         String dataId = null;
         String group = null;
         String tenant = null;
-        
+
         for (int i = 0; i < groupKey.length(); ++i) {
             char c = groupKey.charAt(i);
             if ('+' == c) {
@@ -88,7 +90,7 @@ public class GroupKey {
                 sb.append(c);
             }
         }
-        
+
         if (StringUtils.isBlank(group)) {
             group = sb.toString();
             if (group.length() == 0) {
@@ -100,10 +102,10 @@ public class GroupKey {
                 throw new IllegalArgumentException("invalid groupkey:" + groupKey);
             }
         }
-        
+
         return new String[] {dataId, group, tenant};
     }
-    
+
     /**
      * + -> %2B % -> %25.
      */
@@ -119,5 +121,5 @@ public class GroupKey {
             }
         }
     }
-    
+
 }
